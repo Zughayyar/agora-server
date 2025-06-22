@@ -8,6 +8,13 @@
 *.so
 *.dylib
 
+# Build output directory
+bin/
+
+# Air live reload temporary files
+tmp/
+build-errors.log
+
 # Test binary, built with `go test -c`
 *.test
 
