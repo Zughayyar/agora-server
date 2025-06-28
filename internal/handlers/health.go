@@ -1,9 +1,10 @@
 package handlers
 
 import (
-	"encoding/json"
-	"net/http"
 	"bytes"
+	"encoding/json"
+	"log/slog"
+	"net/http"
 	"time"
 )
 
@@ -28,8 +29,10 @@ func HealthHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Failed to encode response", http.StatusInternalServerError)
 		return
 	}
-	
+
 	w.WriteHeader(http.StatusOK)
-	w.Write(buf.Bytes())
+	if _, err := w.Write(buf.Bytes()); err != nil {
+		slog.Error("Failed to write response body", slog.String("error", err.Error()))
+	}
 
 }

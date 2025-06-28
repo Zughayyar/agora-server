@@ -4,10 +4,8 @@ import (
 	"log/slog"
 	"net/http"
 	"os"
-
 	"agora-server/internal/middlewares"
-	router "agora-server/internal/routers"
-
+	"agora-server/internal/routers"
 	"github.com/joho/godotenv"
 )
 
@@ -32,11 +30,6 @@ func main() {
 	}
 
 	slog.SetDefault(logger)
-
-	port := os.Getenv("APP_PORT")
-	if port == "" {
-		port = "3000"
-	}
 
 	appName := "Agora Restaurant Management API"
 	appVersion := os.Getenv("APP_VERSION")
