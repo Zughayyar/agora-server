@@ -9,9 +9,8 @@ import (
 	"os"
 	"time"
 
-	"agora-server/internal/database"
-	"agora-server/internal/database/migrations"
-
+	"github.com/Zughayyar/agora-server/internal/database"
+	"github.com/Zughayyar/agora-server/internal/database/migrations"
 	"github.com/joho/godotenv"
 )
 

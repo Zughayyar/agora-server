@@ -1,4 +1,4 @@
-module agora-server
+module github.com/Zughayyar/agora-server
 
 go 1.23.0
 

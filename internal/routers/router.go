@@ -1,7 +1,7 @@
 package router
 
 import (
-	"agora-server/internal/handlers"
+	"github.com/Zughayyar/agora-server/internal/handlers"
 	"net/http"
 
 	"github.com/uptrace/bun"
@@ -10,7 +10,6 @@ import (
 func SetupRoutes(mux *http.ServeMux, db *bun.DB) {
 	// API v1 routes
 	apiV1 := http.NewServeMux()
-	apiV1.HandleFunc("/health", handlers.HealthHandler)
 
 	// TODO: Add menu item routes when handlers are implemented
 	// apiV1.HandleFunc("GET /menu-items", handlers.GetMenuItems(db))
@@ -21,6 +20,6 @@ func SetupRoutes(mux *http.ServeMux, db *bun.DB) {
 
 	mux.Handle("/api/v1/", http.StripPrefix("/api/v1", apiV1))
 
-	// Root level health check
-	mux.HandleFunc("/health", handlers.HealthHandler)
+	// Root level health check (simple, no database dependency)
+	mux.HandleFunc("/health", handlers.HealthHandlerWithDB(db))
 }

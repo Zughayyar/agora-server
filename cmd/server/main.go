@@ -10,10 +10,9 @@ import (
 	"syscall"
 	"time"
 
-	"agora-server/internal/database"
-	"agora-server/internal/database/migrations"
-	"agora-server/internal/middlewares"
-	router "agora-server/internal/routers"
+	"github.com/Zughayyar/agora-server/internal/database"
+	"github.com/Zughayyar/agora-server/internal/middlewares"
+	"github.com/Zughayyar/agora-server/internal/routers"
 
 	"github.com/joho/godotenv"
 	"github.com/uptrace/bun"
@@ -64,8 +63,12 @@ func main() {
 	// Setup routes with database dependency
 	router.SetupRoutes(mux, db)
 
-	// Apply global middleware
+	// Add catch-all 404 handler for unmatched routes
+	mux.HandleFunc("/", middlewares.NotFoundHandler())
+
+	// Apply global middleware stack
 	var handler http.Handler = mux
+	handler = middlewares.RecoveryMiddleware(handler)
 	handler = middlewares.LoggingMiddleware(handler)
 	handler = middlewares.CORSMiddleware(handler)
 
@@ -116,7 +119,7 @@ func main() {
 	logger.Info("Server exited gracefully")
 }
 
-// initDatabase initializes the database connection and runs migrations
+// initDatabase initializes the database connection
 func initDatabase() (*bun.DB, error) {
 	// Load database configuration from environment
 	config := database.LoadConfig()
@@ -125,15 +128,6 @@ func initDatabase() (*bun.DB, error) {
 	db, err := database.NewConnection(config)
 	if err != nil {
 		return nil, fmt.Errorf("failed to connect to database: %w", err)
-	}
-
-	// Run migrations with timeout
-	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
-	defer cancel()
-
-	if err := migrations.RunMigrations(ctx, db); err != nil {
-		db.Close()
-		return nil, fmt.Errorf("failed to run migrations: %w", err)
 	}
 
 	return db, nil
