@@ -1,12 +1,12 @@
 package main
 
 import (
-	"log/slog"
-	"net/http"
-	"os"
 	"agora-server/internal/middlewares"
 	"agora-server/internal/routers"
 	"github.com/joho/godotenv"
+	"log/slog"
+	"net/http"
+	"os"
 )
 
 func main() {

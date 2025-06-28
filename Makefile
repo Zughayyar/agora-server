@@ -1,6 +1,6 @@
 # Agora Server Makefile
 
-.PHONY: run build clean test deps dev dev-run
+prettier: fmt vet lint
 
 # Default target
 all: deps build
@@ -15,21 +15,15 @@ deps:
 
 # Build and run the server
 run: build
-	mkdir -p bin
 	@echo "🚀 Starting Agora server..."
 	./bin/agora-server
 
 # Build the server binary
-build:
+build: clean
 	@echo "🔨 Building Agora server binary..."
 	mkdir -p bin
 	go build -o bin/agora-server ./cmd/agora
 	@echo "✅ Binary built successfully at bin/agora-server"
-
-# Run the built binary
-start: build
-	@echo "🚀 Starting Agora server..."
-	./bin/agora-server
 
 # Clean build artifacts
 clean:
@@ -61,3 +55,14 @@ lint:
 	golangci-lint run
 	@echo "✅ Linting completed!"
 
+# Development with live reload using Air
+dev:
+	@echo "🔥 Starting development mode with live reload..."
+	@mkdir -p tmp
+	@if command -v air >/dev/null 2>&1; then \
+		APP_ENV=development air; \
+	else \
+		echo "❌ Air not found. Installing..."; \
+		go install github.com/air-verse/air@latest; \
+		APP_ENV=development air; \
+	fi
