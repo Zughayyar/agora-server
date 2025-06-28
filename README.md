@@ -56,9 +56,18 @@ make dev       # 🔥 Start development with live reload (recommended)
 ### Build & Run
 
 ```bash
-make run       # 🏗️ Build and run production binary
-make build     # 🔨 Build binary to bin/agora-server
+make run       # 🚀 Build and run production binary
+make build     # 🔨 Build binary to bin/server
 make clean     # 🧹 Clean build artifacts
+```
+
+### Database Migrations
+
+```bash
+make migrate           # 🗃️ Run database migrations
+make migrate-rollback  # ↩️ Rollback last database migration
+make migrate-status    # 📊 Check migration status
+make build-migrate     # 🔨 Build migration tool only
 ```
 
 ### Code Quality
@@ -66,7 +75,7 @@ make clean     # 🧹 Clean build artifacts
 ```bash
 make fmt       # 🎨 Format code
 make vet       # 🔍 Vet code for issues
-make lint      # 🔍 Run linter
+make lint      # 🔍 Run linter (requires golangci-lint)
 make prettier  # ✨ Run fmt + vet + lint
 make test      # 🧪 Run tests
 ```
