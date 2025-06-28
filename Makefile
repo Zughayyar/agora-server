@@ -12,6 +12,17 @@ deps:
 	go mod download
 	@echo "✅ Dependencies installed successfully!"
 
+# Setup environment file
+setup-env:
+	@echo "⚙️ Setting up environment file..."
+	@if [ ! -f .env ]; then \
+		cp env.example .env; \
+		echo "✅ .env file created from env.example"; \
+		echo "🔧 Please edit .env file with your specific configuration"; \
+	else \
+		echo "⚠️ .env file already exists"; \
+	fi
+
 # Build and run the server
 run: build
 	mkdir -p bin
@@ -74,4 +85,41 @@ dev:
 # Run in development mode without building binary
 dev-run:
 	@echo "🚀 Running in development mode..."
-	APP_ENV=development go run ./cmd/agora 
+	APP_ENV=development go run ./cmd/agora
+
+# Docker commands
+docker-build:
+	@echo "🐳 Building Docker image..."
+	docker build -t agora-server .
+	@echo "✅ Docker image built successfully!"
+
+docker-up:
+	@echo "🐳 Starting services with Docker Compose..."
+	@if [ ! -f .env ]; then \
+		echo "⚠️ No .env file found. Creating one from env.example..."; \
+		cp env.example .env; \
+		echo "🔧 Please edit .env file with your configuration before running again"; \
+		exit 1; \
+	fi
+	docker-compose up -d
+	@echo "✅ Services started successfully!"
+
+docker-down:
+	@echo "🐳 Stopping Docker services..."
+	docker-compose down
+	@echo "✅ Services stopped successfully!"
+
+docker-logs:
+	@echo "📋 Showing Docker logs..."
+	docker-compose logs -f
+
+docker-restart:
+	@echo "🔄 Restarting Docker services..."
+	docker-compose restart
+	@echo "✅ Services restarted successfully!"
+
+docker-clean:
+	@echo "🧹 Cleaning Docker resources..."
+	docker-compose down -v
+	docker system prune -f
+	@echo "✅ Docker cleanup completed!" 

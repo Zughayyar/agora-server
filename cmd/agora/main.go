@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"os"
 
+	"agora-server/internal/middlewares"
 	router "agora-server/internal/routers"
 
 	"github.com/joho/godotenv"
@@ -48,6 +49,11 @@ func main() {
 	// Setup routes
 	router.SetupRoutes(mux)
 
+	// Apply global middleware
+	var handler http.Handler = mux
+	handler = middlewares.LoggingMiddleware(handler)
+	handler = middlewares.CORSMiddleware(handler)
+
 	// Structured logging with context
 	logger.Info("Agora Server starting",
 		slog.String("app", appName),
@@ -56,7 +62,7 @@ func main() {
 		slog.String("env", appEnv),
 	)
 
-	if err := http.ListenAndServe(":"+appPort, mux); err != nil {
+	if err := http.ListenAndServe(":"+appPort, handler); err != nil {
 		logger.Error("Server failed to start",
 			slog.String("error", err.Error()),
 			slog.String("port", appPort),

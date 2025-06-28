@@ -1,9 +1,9 @@
-package controller
+package handlers
 
 import (
 	"encoding/json"
-	"log/slog"
 	"net/http"
+	"bytes"
 	"time"
 )
 
@@ -23,19 +23,13 @@ func HealthHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-
-	if err := json.NewEncoder(w).Encode(response); err != nil {
-		slog.Error("Failed to encode health response",
-			slog.String("context", "agora-server"),
-			slog.String("error", err.Error()),
-		)
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
 		http.Error(w, "Failed to encode response", http.StatusInternalServerError)
 		return
 	}
+	
+	w.WriteHeader(http.StatusOK)
+	w.Write(buf.Bytes())
 
-	slog.Info("Health check completed",
-		slog.String("context", "agora-server"),
-		slog.String("status", "healthy"),
-	)
 }
