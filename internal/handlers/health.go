@@ -9,7 +9,6 @@ import (
 
 // HealthResponse represents the JSON response for health check
 type HealthResponse struct {
-	Message   string    `json:"message"`
 	Service   string    `json:"service"`
 	Status    string    `json:"status"`
 	Timestamp time.Time `json:"timestamp"`
@@ -18,7 +17,6 @@ type HealthResponse struct {
 // HealthHandler handles the root route and returns a hello message
 func HealthHandler(w http.ResponseWriter, r *http.Request) {
 	response := HealthResponse{
-		Message:   "Hello from Agora Restaurant Management API! 🍽️",
 		Service:   "agora-server",
 		Status:    "healthy",
 		Timestamp: time.Now(),

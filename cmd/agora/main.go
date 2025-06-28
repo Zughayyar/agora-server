@@ -5,9 +5,8 @@ import (
 	"net/http"
 	"os"
 
-	"agora-server/internal/router"
+	router "agora-server/internal/routers"
 
-	"github.com/go-chi/chi/v5"
 	"github.com/joho/godotenv"
 )
 
@@ -33,19 +32,21 @@ func main() {
 
 	slog.SetDefault(logger)
 
-	port := os.Getenv("PORT")
+	port := os.Getenv("APP_PORT")
 	if port == "" {
-		port = "8000"
+		port = "3000"
 	}
 
-	appName := os.Getenv("APP_NAME")
+	appName := "Agora Restaurant Management API"
 	appVersion := os.Getenv("APP_VERSION")
 	appPort := os.Getenv("APP_PORT")
 	appEnv := os.Getenv("APP_ENV")
 
-	r := chi.NewRouter()
+	// Create a new ServeMux for routing
+	mux := http.NewServeMux()
 
-	router.SetupRoutes(r)
+	// Setup routes
+	router.SetupRoutes(mux)
 
 	// Structured logging with context
 	logger.Info("Agora Server starting",
@@ -54,16 +55,11 @@ func main() {
 		slog.String("port", appPort),
 		slog.String("env", appEnv),
 	)
-	logger.Info("API accessible",
-		slog.String("url", "http://localhost:"+port),
-		slog.String("health_check", "http://localhost:"+port+"/"),
-		slog.String("api_health", "http://localhost:"+port+"/api/v1/health"),
-	)
 
-	if err := http.ListenAndServe(":"+port, r); err != nil {
+	if err := http.ListenAndServe(":"+appPort, mux); err != nil {
 		logger.Error("Server failed to start",
 			slog.String("error", err.Error()),
-			slog.String("port", port),
+			slog.String("port", appPort),
 		)
 		os.Exit(1)
 	}

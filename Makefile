@@ -14,6 +14,7 @@ deps:
 
 # Build and run the server
 run: build
+	mkdir -p bin
 	@echo "🚀 Starting Agora server..."
 	./bin/agora-server
 
@@ -21,7 +22,7 @@ run: build
 build:
 	@echo "🔨 Building Agora server binary..."
 	mkdir -p bin
-	go build -o bin/agora-server ./cmd/agora-server
+	go build -o bin/agora-server ./cmd/agora
 	@echo "✅ Binary built successfully at bin/agora-server"
 
 # Run the built binary
@@ -73,4 +74,4 @@ dev:
 # Run in development mode without building binary
 dev-run:
 	@echo "🚀 Running in development mode..."
-	APP_ENV=development go run ./cmd/agora-server 
+	APP_ENV=development go run ./cmd/agora 
