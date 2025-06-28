@@ -14,137 +14,116 @@ A simple and scalable Go REST API server for restaurant management following Go 
 1. **Install dependencies**:
 
    ```bash
-   go mod tidy
+   make deps
    ```
 
-2. **Build and run the server**:
+2. **Start development with live reload**:
 
    ```bash
-   make run
+   make dev
    ```
-
-   This will build the binary to `bin/agora-server` and run it.
 
 3. **Test the API**:
-
    ```bash
-   curl http://localhost:8080/
+   curl http://localhost:3000/health
    ```
 
 ## 📡 API Endpoints
 
 ### Health Check
 
-- **GET** `/` - Root health check
+- **GET** `/health` - Root health check
 - **GET** `/api/v1/health` - Versioned health check
 
 Both endpoints return:
 
 ```json
 {
-    "message": "Hello from Agora Restaurant Management API! 🍽️",
-    "service": "agora-server",
-    "status": "healthy",
-    "timestamp": "2025-06-22T22:59:39.569107+03:00"
+  "service": "agora-server",
+  "status": "healthy",
+  "timestamp": "2025-06-28T18:44:41.864+03:00"
 }
 ```
 
-## 🏗️ Project Structure
-
-```text
-server/
-├── cmd/                    # Application entry points
-│   └── agora-server/      # Main application
-│       └── main.go        # Application entry point
-├── internal/              # Private application code
-│   ├── handlers/          # HTTP request handlers
-│   │   └── health.go      # Health check handler
-│   ├── middleware/        # HTTP middleware
-│   │   └── middleware.go  # Logging and CORS middleware
-│   └── router/            # Route configuration
-│       └── router.go      # Route setup and organization
-├── bin/                   # Built binaries (excluded from git)
-├── go.mod                 # Go module definition
-├── go.sum                 # Go module checksums
-├── Makefile              # Build and run commands
-├── .gitignore            # Git ignore rules
-└── README.md             # This file
-```
-
-This structure follows the [Standard Go Project Layout](https://github.com/golang-standards/project-layout):
-
-- `cmd/` - Main applications for this project
-- `internal/` - Private application and library code
-- `bin/` - Binary output directory (auto-created)
-
 ## 🛠️ Available Commands
 
-Using the Makefile:
+### Development
 
 ```bash
-make deps      # Install dependencies
-make run       # Build and run the server
-make build     # Build binary to bin/agora-server
-make start     # Build and run binary (alias for run)
-make clean     # Clean build artifacts (removes bin/)
-make fmt       # Format code
-make vet       # Vet code for issues
-make test      # Run tests (when added)
-make dev-run   # Run directly without building binary
+make dev       # 🔥 Start development with live reload (recommended)
 ```
 
-### Manual Commands
+### Build & Run
 
 ```bash
-# Build manually
-go build -o bin/agora-server ./cmd/agora-server
+make run       # 🏗️ Build and run production binary
+make build     # 🔨 Build binary to bin/agora-server
+make clean     # 🧹 Clean build artifacts
+```
 
-# Run development mode
-go run ./cmd/agora-server
+### Code Quality
 
-# Run built binary
-./bin/agora-server
+```bash
+make fmt       # 🎨 Format code
+make vet       # 🔍 Vet code for issues
+make lint      # 🔍 Run linter
+make prettier  # ✨ Run fmt + vet + lint
+make test      # 🧪 Run tests
+```
+
+### Setup
+
+```bash
+make deps      # 📦 Install dependencies
+make all       # 🚀 Install deps + build (default)
 ```
 
 ## 🔧 Configuration
 
-The server uses environment variables for configuration:
-
-- `PORT` - Server port (default: 8080)
-
-Example:
+Create a `.env` file from the template:
 
 ```bash
-PORT=3000 make run
+cp env.example .env
 ```
 
-## 🎯 Future Features
+Edit the `.env` file with your configuration:
 
-The current structure is designed to easily extend with:
+```bash
+# Application Configuration
+APP_ENV=development
+APP_PORT=3000
+APP_VERSION=1.0.0
 
-- Database integration
-- User authentication (JWT)
-- Restaurant management endpoints
-- Menu management
-- Order processing
-- Real-time updates
+# Database Configuration
+DB_HOST=localhost
+DB_PORT=5432
+DB_NAME=agora_db
+DB_USER=agora_user
+DB_PASSWORD=agora_password
+DB_SSL_MODE=disable
+```
 
-## 📝 Development
+## 🐳 Docker Support
 
-This server follows Go best practices:
+Start with PostgreSQL database:
 
-- **Standard Go Project Layout** with `cmd/` and `internal/` directories
-- **Clean architecture** with separated concerns
-- **Middleware** for cross-cutting concerns
-- **Structured logging** with request tracking
-- **CORS support** for frontend integration
-- **Graceful error handling**
-- **Environment-based configuration**
-- **Binary output isolation** in `bin/` directory
+```bash
+docker-compose up -d
+```
 
-## 🔨 Build Information
+## 🔥 Development Workflow
 
-- **Binary Output**: `bin/agora-server`
-- **Main Package**: `./cmd/agora-server`
-- **Module Name**: `agora-server`
-- **Go Version**: 1.21+
+1. **Start live reload development**:
+
+   ```bash
+   make dev
+   ```
+
+2. **Edit your code** - Air automatically rebuilds and restarts the server
+
+3. **Test your changes** - Server restarts instantly on file changes
+
+4. **Quality checks**:
+   ```bash
+   make prettier  # Format, vet, and lint
+   ```

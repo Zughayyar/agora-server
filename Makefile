@@ -16,14 +16,14 @@ deps:
 # Build and run the server
 run: build
 	@echo "🚀 Starting Agora server..."
-	./bin/agora-server
+	./bin/server
 
 # Build the server binary
 build: clean
 	@echo "🔨 Building Agora server binary..."
 	mkdir -p bin
-	go build -o bin/agora-server ./cmd/agora
-	@echo "✅ Binary built successfully at bin/agora-server"
+	go build -o bin/server ./cmd/server
+	@echo "✅ Binary built successfully at bin/server"
 
 # Clean build artifacts
 clean:
@@ -66,3 +66,23 @@ dev:
 		go install github.com/air-verse/air@latest; \
 		APP_ENV=development air; \
 	fi
+
+# Build migration tool
+build-migrate: clean
+	@echo "🔨 Building migration tool..."
+	mkdir -p bin
+	go build -o bin/migration ./cmd/migration
+	@echo "✅ Migration tool built successfully at bin/migrate"
+
+# Database Migration Commands
+migrate: build-migrate
+	@echo "🗃️ Running database migrations..."
+	./bin/migration -action=migrate
+
+migrate-rollback: build-migrate
+	@echo "↩️ Rolling back database migrations..."
+	./bin/migration -action=rollback
+
+migrate-status: build-migrate
+	@echo "📊 Checking migration status..."
+	./bin/migration -action=status
