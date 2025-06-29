@@ -21,7 +21,7 @@ jobs:
       packages: write
 
     outputs:
-      image-tag: ${{ steps.meta.outputs.tags }}
+      image-tag: ${{ steps.tag.outputs.single-tag }}
       image-digest: ${{ steps.build.outputs.digest }}
 
     steps:
@@ -60,6 +60,14 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
+
+      - name: Extract single image tag
+        id: tag
+        run: |
+          # Extract the first tag from the comma-separated list
+          FIRST_TAG=$(echo "${{ steps.meta.outputs.tags }}" | cut -d',' -f1 | tr -d ' ')
+          echo "single-tag=$FIRST_TAG" >> $GITHUB_OUTPUT
+          echo "📦 Using image tag: $FIRST_TAG"
 
       - name: Build status
         run: |
@@ -110,6 +118,10 @@ jobs:
             else
               echo "IMAGE_TAG=$IMAGE_TAG" >> .env
             fi
+
+            # Debug: Show the .env file content
+            echo "🔍 Current .env IMAGE_TAG:"
+            grep "IMAGE_TAG=" .env || echo "No IMAGE_TAG found in .env"
 
             # Stop existing containers
             docker-compose down || true
