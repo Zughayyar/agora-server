@@ -54,36 +54,36 @@ jobs:
           username: ${{ secrets.AWS_USER }}
           key: ${{ secrets.AWS_SSH_KEY }}
           port: 22
-          script:
-            # Navigate to application directory
-            cd /home/${{ secrets.AWS_USER }}/agora-server || exit 1
-
-            # Pull latest code
-            git pull origin main
-
-            # Copy environment file if it doesn't exist
-            if [ ! -f .env ]; then
-              cp env.example .env
-              echo "⚠️  Please configure .env file with your settings"
-            fi
-
-            # Stop existing containers
-            docker-compose down || true
-
-            # Remove old images
-            docker image prune -f || true
-
-            # Build and start services (builds fresh on server)
-            docker-compose up -d --build
-
-            # Wait for services to be ready
-            echo "⏳ Waiting for services to start..."
-            sleep 30
-
-            # Check if containers are running
-            docker-compose ps
-
-            echo "🎉 Deployment completed!"
+                  script: |
+          # Navigate to application directory
+          cd /home/${{ secrets.AWS_USER }}/agora-server || exit 1
+          
+          # Pull latest code
+          git pull origin main
+          
+          # Copy environment file if it doesn't exist
+          if [ ! -f .env ]; then
+            cp env.example .env
+            echo "⚠️  Please configure .env file with your settings"
+          fi
+          
+          # Stop existing containers
+          docker-compose down || true
+          
+          # Remove old images
+          docker image prune -f || true
+          
+          # Build and start services (builds fresh on server)
+          docker-compose up -d --build
+          
+          # Wait for services to be ready
+          echo "⏳ Waiting for services to start..."
+          sleep 30
+          
+          # Check if containers are running
+          docker-compose ps
+          
+          echo "🎉 Deployment completed!"
 
       - name: Health check
         run: |
