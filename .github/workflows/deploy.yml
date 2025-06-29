@@ -8,10 +8,6 @@ on:
     branches:
       - main
 
-env:
-  REGISTRY: ghcr.io
-  IMAGE_NAME: ${{ github.repository }}
-
 jobs:
   # Build and test job - runs on both PR and push
   build:
@@ -24,33 +20,13 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      - name: Log in to Container Registry
-        uses: docker/login-action@v3
-        with:
-          registry: ${{ env.REGISTRY }}
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Extract metadata
-        id: meta
-        uses: docker/metadata-action@v5
-        with:
-          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
-          tags: |
-            type=ref,event=branch
-            type=ref,event=pr,prefix=pr-
-            type=sha,prefix={{branch}}-,enable={{is_default_branch}}
-            type=sha,prefix=pr-,enable=${{ github.event_name == 'pull_request' }}
-            type=raw,value=latest,enable={{is_default_branch}}
-
-      - name: Build and push Docker image
+      - name: Build Docker image (test only)
         uses: docker/build-push-action@v5
         with:
           context: .
           file: ./Dockerfile
-          push: ${{ github.event_name == 'push' }}
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
+          push: false # Never push from build job
+          tags: agora-server:test
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
@@ -79,11 +55,11 @@ jobs:
           key: ${{ secrets.AWS_SSH_KEY }}
           port: 22
           script: |
-            # Navigate to application directory
-            cd /home/${{ secrets.AWS_USER }}/agora-server || exit 1
-
-            # Pull latest code
-            git pull origin main
+          # Navigate to application directory
+          cd /home/${{ secrets.AWS_USER }}/agora-server || exit 1
+          
+          # Pull latest code
+          git pull origin main
 
             # Copy environment file if it doesn't exist
             if [ ! -f .env ]; then
@@ -94,10 +70,10 @@ jobs:
             # Stop existing containers
             docker-compose down || true
 
-            # Pull latest images
-            docker-compose pull || true
+            # Remove old images
+            docker image prune -f || true
 
-            # Build and start services
+            # Build and start services (builds fresh on server)
             docker-compose up -d --build
 
             # Wait for services to be ready
@@ -107,8 +83,7 @@ jobs:
             # Check if containers are running
             docker-compose ps
 
-            # Clean up old images
-            docker image prune -f || true
+            echo "🎉 Deployment completed!"
 
       - name: Health check
         run: |
