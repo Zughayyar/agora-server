@@ -18,7 +18,7 @@ func init() {
 				name VARCHAR(100) NOT NULL,
 				description TEXT,
 				price DECIMAL(10,2) NOT NULL CHECK (price > 0),
-				category VARCHAR(50) NOT NULL CHECK (category IN ('appetizer', 'main', 'dessert', 'drink', 'side')),
+				category VARCHAR(50) NOT NULL DEFAULT 'main',
 				is_available BOOLEAN NOT NULL DEFAULT TRUE,
 				created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
 				updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,

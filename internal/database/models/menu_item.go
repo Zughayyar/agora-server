@@ -70,13 +70,14 @@ func (m *MenuItem) SoftDelete(ctx context.Context, db *bun.DB) error {
 
 // Restore restores a soft-deleted record
 func (m *MenuItem) Restore(ctx context.Context, db *bun.DB) error {
+	now := time.Now()
 	m.DeletedAt = nil
-	m.UpdatedAt = time.Now()
+	m.UpdatedAt = now
 
 	_, err := db.NewUpdate().
-		Model(m).
+		Table("menu_items").
 		Set("deleted_at = NULL").
-		Set("updated_at = ?", m.UpdatedAt).
+		Set("updated_at = ?", now).
 		Where("id = ?", m.ID).
 		Exec(ctx)
 
@@ -138,8 +139,8 @@ func (q *MenuItemQuery) All(ctx context.Context) ([]MenuItem, error) {
 func (q *MenuItemQuery) WithDeleted(ctx context.Context) ([]MenuItem, error) {
 	var items []MenuItem
 	err := q.db.NewSelect().
-		Model(&items).
-		Scan(ctx)
+		Table("menu_items").
+		Scan(ctx, &items)
 	return items, err
 }
 
@@ -147,9 +148,9 @@ func (q *MenuItemQuery) WithDeleted(ctx context.Context) ([]MenuItem, error) {
 func (q *MenuItemQuery) OnlyDeleted(ctx context.Context) ([]MenuItem, error) {
 	var items []MenuItem
 	err := q.db.NewSelect().
-		Model(&items).
+		Table("menu_items").
 		Where("deleted_at IS NOT NULL").
-		Scan(ctx)
+		Scan(ctx, &items)
 	return items, err
 }
 
@@ -158,7 +159,7 @@ func (q *MenuItemQuery) FindByID(ctx context.Context, id uuid.UUID) (*MenuItem, 
 	var item MenuItem
 	err := q.db.NewSelect().
 		Model(&item).
-		Where("id = ? AND deleted_at IS NULL", id).
+		Where("id = ?", id).
 		Scan(ctx)
 	return &item, err
 }
@@ -167,8 +168,8 @@ func (q *MenuItemQuery) FindByID(ctx context.Context, id uuid.UUID) (*MenuItem, 
 func (q *MenuItemQuery) FindByIDWithDeleted(ctx context.Context, id uuid.UUID) (*MenuItem, error) {
 	var item MenuItem
 	err := q.db.NewSelect().
-		Model(&item).
+		Table("menu_items").
 		Where("id = ?", id).
-		Scan(ctx)
+		Scan(ctx, &item)
 	return &item, err
 }
