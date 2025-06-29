@@ -65,7 +65,7 @@ jobs:
         id: tag
         run: |
           # Extract the first tag from the comma-separated list
-          FIRST_TAG=$(echo "${{ steps.meta.outputs.tags }}" | cut -d',' -f1 | tr -d ' ')
+          FIRST_TAG=$(echo "${{ steps.meta.outputs.tags }}" | head -n1 | tr -d ' ')
           echo "single-tag=$FIRST_TAG" >> $GITHUB_OUTPUT
           echo "📦 Using image tag: $FIRST_TAG"
 
