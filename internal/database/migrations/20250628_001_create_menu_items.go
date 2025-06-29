@@ -14,7 +14,7 @@ func init() {
 		// Create the menu_items table with specified schema
 		_, err := db.ExecContext(ctx, `
 			CREATE TABLE IF NOT EXISTS menu_items (
-				id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+				id SERIAL PRIMARY KEY,
 				name VARCHAR(100) NOT NULL,
 				description TEXT,
 				price DECIMAL(10,2) NOT NULL CHECK (price > 0),

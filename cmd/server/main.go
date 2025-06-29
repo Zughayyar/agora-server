@@ -12,7 +12,7 @@ import (
 
 	"github.com/Zughayyar/agora-server/internal/database"
 	"github.com/Zughayyar/agora-server/internal/middlewares"
-	"github.com/Zughayyar/agora-server/internal/routers"
+	router "github.com/Zughayyar/agora-server/internal/routers"
 
 	"github.com/joho/godotenv"
 	"github.com/uptrace/bun"
@@ -53,7 +53,7 @@ func main() {
 	appVersion := os.Getenv("APP_VERSION")
 	appPort := os.Getenv("APP_PORT")
 	if appPort == "" {
-		appPort = "8080" // Default port
+		appPort = "3000" // Updated to match actual usage
 	}
 	appEnv := os.Getenv("APP_ENV")
 
@@ -63,8 +63,8 @@ func main() {
 	// Setup routes with database dependency
 	router.SetupRoutes(mux, db)
 
-	// Add catch-all 404 handler for unmatched routes
-	mux.HandleFunc("/", middlewares.NotFoundHandler())
+	// Add catch-all 404 handler for unmatched routes (except root)
+	mux.HandleFunc("/{path...}", middlewares.NotFoundHandler())
 
 	// Apply global middleware stack
 	var handler http.Handler = mux

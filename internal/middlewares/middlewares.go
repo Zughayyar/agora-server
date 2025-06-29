@@ -11,8 +11,6 @@ import (
 // LoggingMiddleware logs HTTP requests with response status and timing
 func LoggingMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		start := time.Now()
-
 		// Wrap the response writer to capture status code
 		lrw := &loggingResponseWriter{
 			ResponseWriter: w,
@@ -23,7 +21,6 @@ func LoggingMiddleware(next http.Handler) http.Handler {
 		next.ServeHTTP(lrw, r)
 
 		// Log the request with all details
-		duration := time.Since(start)
 		level := slog.LevelInfo
 
 		// Use different log levels based on status code
@@ -37,12 +34,9 @@ func LoggingMiddleware(next http.Handler) http.Handler {
 		slog.Log(r.Context(), level, "HTTP Request",
 			slog.String("method", r.Method),
 			slog.String("path", r.URL.Path),
-			slog.String("query", r.URL.RawQuery),
 			slog.Int("status", lrw.statusCode),
-			slog.Int("size", lrw.size),
 			slog.String("remote_addr", r.RemoteAddr),
 			slog.String("user_agent", r.UserAgent()),
-			slog.Duration("duration", duration),
 		)
 	})
 }

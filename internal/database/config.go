@@ -87,7 +87,7 @@ func NewConnection(config *Config) (*bun.DB, error) {
 	db := bun.NewDB(sqldb, pgdialect.New())
 
 	// Add debug logging in development mode
-	if os.Getenv("APP_ENV") == "development" {
+	if os.Getenv("APP_ENV") == "development" && os.Getenv("DB_LOG_QUERIES") != "false" {
 		db.AddQueryHook(bundebug.NewQueryHook(
 			bundebug.WithVerbose(true), // Show full queries
 			bundebug.WithEnabled(true), // Enable debugging

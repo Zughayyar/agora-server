@@ -4,9 +4,9 @@ import (
 	"encoding/json"
 	"errors"
 	"net/http"
+	"strconv"
 	"strings"
 
-	"github.com/google/uuid"
 	"github.com/uptrace/bun"
 
 	"github.com/Zughayyar/agora-server/internal/services"
@@ -235,10 +235,11 @@ func (h *MenuItemHandlers) GetMenuItemsByCategory(w http.ResponseWriter, r *http
 		"dessert":   true,
 		"drink":     true,
 		"side":      true,
+		"fast food": true,
 	}
 
 	if !validCategories[category] {
-		h.writeErrorResponse(w, "Invalid category. Must be one of: appetizer, main, dessert, drink, side", http.StatusBadRequest)
+		h.writeErrorResponse(w, "Invalid category. Must be one of: appetizer, main, dessert, drink, side, fast food", http.StatusBadRequest)
 		return
 	}
 
@@ -252,8 +253,8 @@ func (h *MenuItemHandlers) GetMenuItemsByCategory(w http.ResponseWriter, r *http
 	h.writeSuccessResponse(w, items, "Menu items retrieved successfully", http.StatusOK)
 }
 
-// Helper function to extract UUID from URL path
-func (h *MenuItemHandlers) extractIDFromPath(path string) (uuid.UUID, error) {
+// Helper function to extract ID from URL path
+func (h *MenuItemHandlers) extractIDFromPath(path string) (int, error) {
 	// Split path and get the last part that should be the ID
 	pathParts := strings.Split(strings.Trim(path, "/"), "/")
 
@@ -261,15 +262,30 @@ func (h *MenuItemHandlers) extractIDFromPath(path string) (uuid.UUID, error) {
 	for i, part := range pathParts {
 		if part == "items" && i+1 < len(pathParts) {
 			idStr := pathParts[i+1]
-			// Stop if we hit another path segment like "restore"
+
+			// Skip if this is a special endpoint, not an ID
 			if idStr == "restore" || idStr == "deleted" || idStr == "category" {
-				continue
+				return 0, errors.New("invalid ID format: this is a special endpoint")
 			}
-			return uuid.Parse(idStr)
+
+			// Check if this looks like a restore endpoint: /items/{id}/restore
+			if i+2 < len(pathParts) && pathParts[i+2] == "restore" {
+				// This is /items/{id}/restore - parse the ID
+				return strconv.Atoi(idStr)
+			}
+
+			// Check if this is a regular ID endpoint: /items/{id}
+			if i+2 >= len(pathParts) {
+				// This is just /items/{id}
+				return strconv.Atoi(idStr)
+			}
+
+			// If we get here, it's an unexpected pattern
+			return 0, errors.New("invalid ID format: unexpected path pattern")
 		}
 	}
 
-	return uuid.Nil, errors.New("invalid UUID format")
+	return 0, errors.New("invalid ID format: no ID found in path")
 }
 
 // Helper function to write error responses
@@ -283,7 +299,11 @@ func (h *MenuItemHandlers) writeErrorResponse(w http.ResponseWriter, message str
 		Code:    statusCode,
 	}
 
-	json.NewEncoder(w).Encode(errorResp)
+	if err := json.NewEncoder(w).Encode(errorResp); err != nil {
+		// If we can't encode the error response, there's not much we can do
+		// The status code has already been set, so the client will get that
+		return
+	}
 }
 
 // Helper function to write success responses
@@ -296,5 +316,9 @@ func (h *MenuItemHandlers) writeSuccessResponse(w http.ResponseWriter, data inte
 		Message: message,
 	}
 
-	json.NewEncoder(w).Encode(successResp)
+	if err := json.NewEncoder(w).Encode(successResp); err != nil {
+		// If we can't encode the success response, there's not much we can do
+		// The status code has already been set, so the client will get that
+		return
+	}
 }

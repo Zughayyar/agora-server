@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/google/uuid"
 	"github.com/shopspring/decimal"
 	"github.com/uptrace/bun"
 
@@ -30,7 +29,7 @@ type CreateMenuItemRequest struct {
 	Name        string          `json:"name" validate:"required,min=1,max=100"`
 	Description *string         `json:"description,omitempty"`
 	Price       decimal.Decimal `json:"price" validate:"required,gt=0"`
-	Category    string          `json:"category" validate:"required,oneof=appetizer main dessert drink side"`
+	Category    string          `json:"category" validate:"required,oneof=appetizer main dessert drink side 'fast food'"`
 	IsAvailable *bool           `json:"is_available,omitempty"`
 }
 
@@ -39,13 +38,13 @@ type UpdateMenuItemRequest struct {
 	Name        *string          `json:"name,omitempty" validate:"omitempty,min=1,max=100"`
 	Description *string          `json:"description,omitempty"`
 	Price       *decimal.Decimal `json:"price,omitempty" validate:"omitempty,gt=0"`
-	Category    *string          `json:"category,omitempty" validate:"omitempty,oneof=appetizer main dessert drink side"`
+	Category    *string          `json:"category,omitempty" validate:"omitempty,oneof=appetizer main dessert drink side 'fast food'"`
 	IsAvailable *bool            `json:"is_available,omitempty"`
 }
 
 // MenuItemResponse represents the response structure for menu items
 type MenuItemResponse struct {
-	ID          uuid.UUID       `json:"id"`
+	ID          int             `json:"id"`
 	Name        string          `json:"name"`
 	Description *string         `json:"description,omitempty"`
 	Price       decimal.Decimal `json:"price"`
@@ -97,10 +96,10 @@ func (s *MenuItemService) GetAllMenuItems(ctx context.Context) ([]MenuItemRespon
 }
 
 // GetMenuItemByID retrieves a specific menu item by ID
-func (s *MenuItemService) GetMenuItemByID(ctx context.Context, id uuid.UUID) (*MenuItemResponse, error) {
+func (s *MenuItemService) GetMenuItemByID(ctx context.Context, id int) (*MenuItemResponse, error) {
 	item, err := s.query.FindByID(ctx, id)
 	if err != nil {
-		return nil, fmt.Errorf("failed to find menu item with ID %s: %w", id, err)
+		return nil, fmt.Errorf("failed to find menu item with ID %d: %w", id, err)
 	}
 
 	return s.toResponse(item), nil
@@ -147,11 +146,11 @@ func (s *MenuItemService) GetAvailableMenuItems(ctx context.Context) ([]MenuItem
 }
 
 // UpdateMenuItem updates an existing menu item
-func (s *MenuItemService) UpdateMenuItem(ctx context.Context, id uuid.UUID, req UpdateMenuItemRequest) (*MenuItemResponse, error) {
+func (s *MenuItemService) UpdateMenuItem(ctx context.Context, id int, req UpdateMenuItemRequest) (*MenuItemResponse, error) {
 	// First, get the existing item
 	item, err := s.query.FindByID(ctx, id)
 	if err != nil {
-		return nil, fmt.Errorf("failed to find menu item with ID %s: %w", id, err)
+		return nil, fmt.Errorf("failed to find menu item with ID %d: %w", id, err)
 	}
 
 	// Update fields if provided
@@ -185,11 +184,11 @@ func (s *MenuItemService) UpdateMenuItem(ctx context.Context, id uuid.UUID, req 
 }
 
 // SoftDeleteMenuItem marks a menu item as deleted (soft delete)
-func (s *MenuItemService) SoftDeleteMenuItem(ctx context.Context, id uuid.UUID) error {
+func (s *MenuItemService) SoftDeleteMenuItem(ctx context.Context, id int) error {
 	// Get the item first
 	item, err := s.query.FindByID(ctx, id)
 	if err != nil {
-		return fmt.Errorf("failed to find menu item with ID %s: %w", id, err)
+		return fmt.Errorf("failed to find menu item with ID %d: %w", id, err)
 	}
 
 	// Perform soft delete
@@ -201,16 +200,16 @@ func (s *MenuItemService) SoftDeleteMenuItem(ctx context.Context, id uuid.UUID) 
 }
 
 // RestoreMenuItem restores a soft-deleted menu item
-func (s *MenuItemService) RestoreMenuItem(ctx context.Context, id uuid.UUID) (*MenuItemResponse, error) {
+func (s *MenuItemService) RestoreMenuItem(ctx context.Context, id int) (*MenuItemResponse, error) {
 	// Get the item including deleted ones
 	item, err := s.query.FindByIDWithDeleted(ctx, id)
 	if err != nil {
-		return nil, fmt.Errorf("failed to find menu item with ID %s: %w", id, err)
+		return nil, fmt.Errorf("failed to find menu item with ID %d: %w", id, err)
 	}
 
 	// Check if it's actually deleted
 	if !item.IsDeleted() {
-		return nil, fmt.Errorf("menu item with ID %s is not deleted", id)
+		return nil, fmt.Errorf("menu item with ID %d is not deleted", id)
 	}
 
 	// Restore the item
@@ -222,11 +221,11 @@ func (s *MenuItemService) RestoreMenuItem(ctx context.Context, id uuid.UUID) (*M
 }
 
 // ForceDeleteMenuItem permanently deletes a menu item from database
-func (s *MenuItemService) ForceDeleteMenuItem(ctx context.Context, id uuid.UUID) error {
+func (s *MenuItemService) ForceDeleteMenuItem(ctx context.Context, id int) error {
 	// Get the item including deleted ones
 	item, err := s.query.FindByIDWithDeleted(ctx, id)
 	if err != nil {
-		return fmt.Errorf("failed to find menu item with ID %s: %w", id, err)
+		return fmt.Errorf("failed to find menu item with ID %d: %w", id, err)
 	}
 
 	// Permanently delete
