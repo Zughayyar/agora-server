@@ -54,7 +54,7 @@ jobs:
           username: ${{ secrets.AWS_USER }}
           key: ${{ secrets.AWS_SSH_KEY }}
           port: 22
-                  script: |
+          script:
           # Navigate to application directory
           cd /home/${{ secrets.AWS_USER }}/agora-server || exit 1
           
