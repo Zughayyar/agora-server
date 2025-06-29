@@ -3,6 +3,7 @@ package handlers
 import (
 	"encoding/json"
 	"errors"
+	"log/slog"
 	"net/http"
 	"strconv"
 	"strings"
@@ -50,6 +51,10 @@ func (h *MenuItemHandlers) CreateMenuItem(w http.ResponseWriter, r *http.Request
 	// Create menu item using service
 	item, err := h.service.CreateMenuItem(r.Context(), req)
 	if err != nil {
+		slog.Error("Failed to create menu item",
+			slog.String("error", err.Error()),
+			slog.String("name", req.Name),
+			slog.String("category", req.Category))
 		h.writeErrorResponse(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -84,6 +89,12 @@ func (h *MenuItemHandlers) GetAllMenuItems(w http.ResponseWriter, r *http.Reques
 	}
 
 	if err != nil {
+		slog.Error("Failed to retrieve menu items",
+			slog.String("error", err.Error()),
+			slog.String("category", category),
+			slog.Bool("available_only", availableOnly),
+			slog.Bool("include_deleted", includeDeleted),
+			slog.String("search", search))
 		h.writeErrorResponse(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -104,9 +115,13 @@ func (h *MenuItemHandlers) GetMenuItemByID(w http.ResponseWriter, r *http.Reques
 	item, err := h.service.GetMenuItemByID(r.Context(), id)
 	if err != nil {
 		if strings.Contains(err.Error(), "no rows") {
+			slog.Warn("Menu item not found", slog.Int("id", id))
 			h.writeErrorResponse(w, "Menu item not found", http.StatusNotFound)
 			return
 		}
+		slog.Error("Failed to get menu item by ID",
+			slog.String("error", err.Error()),
+			slog.Int("id", id))
 		h.writeErrorResponse(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -134,9 +149,13 @@ func (h *MenuItemHandlers) UpdateMenuItem(w http.ResponseWriter, r *http.Request
 	item, err := h.service.UpdateMenuItem(r.Context(), id, req)
 	if err != nil {
 		if strings.Contains(err.Error(), "no rows") {
+			slog.Warn("Menu item not found for update", slog.Int("id", id))
 			h.writeErrorResponse(w, "Menu item not found", http.StatusNotFound)
 			return
 		}
+		slog.Error("Failed to update menu item",
+			slog.String("error", err.Error()),
+			slog.Int("id", id))
 		h.writeErrorResponse(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -166,9 +185,14 @@ func (h *MenuItemHandlers) DeleteMenuItem(w http.ResponseWriter, r *http.Request
 
 	if err != nil {
 		if strings.Contains(err.Error(), "no rows") {
+			slog.Warn("Menu item not found for deletion", slog.Int("id", id))
 			h.writeErrorResponse(w, "Menu item not found", http.StatusNotFound)
 			return
 		}
+		slog.Error("Failed to delete menu item",
+			slog.String("error", err.Error()),
+			slog.Int("id", id),
+			slog.Bool("force_delete", forceDelete))
 		h.writeErrorResponse(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -194,13 +218,18 @@ func (h *MenuItemHandlers) RestoreMenuItem(w http.ResponseWriter, r *http.Reques
 	item, err := h.service.RestoreMenuItem(r.Context(), id)
 	if err != nil {
 		if strings.Contains(err.Error(), "no rows") {
+			slog.Warn("Menu item not found for restoration", slog.Int("id", id))
 			h.writeErrorResponse(w, "Menu item not found", http.StatusNotFound)
 			return
 		}
 		if strings.Contains(err.Error(), "not deleted") {
+			slog.Warn("Attempted to restore non-deleted menu item", slog.Int("id", id))
 			h.writeErrorResponse(w, "Menu item is not deleted", http.StatusBadRequest)
 			return
 		}
+		slog.Error("Failed to restore menu item",
+			slog.String("error", err.Error()),
+			slog.Int("id", id))
 		h.writeErrorResponse(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -212,6 +241,7 @@ func (h *MenuItemHandlers) RestoreMenuItem(w http.ResponseWriter, r *http.Reques
 func (h *MenuItemHandlers) GetDeletedMenuItems(w http.ResponseWriter, r *http.Request) {
 	items, err := h.service.GetDeletedMenuItems(r.Context())
 	if err != nil {
+		slog.Error("Failed to retrieve deleted menu items", slog.String("error", err.Error()))
 		h.writeErrorResponse(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -246,6 +276,9 @@ func (h *MenuItemHandlers) GetMenuItemsByCategory(w http.ResponseWriter, r *http
 	// Get menu items by category
 	items, err := h.service.GetMenuItemsByCategory(r.Context(), category)
 	if err != nil {
+		slog.Error("Failed to retrieve menu items by category",
+			slog.String("error", err.Error()),
+			slog.String("category", category))
 		h.writeErrorResponse(w, err.Error(), http.StatusInternalServerError)
 		return
 	}

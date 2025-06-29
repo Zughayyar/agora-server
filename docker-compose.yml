@@ -8,7 +8,6 @@ services:
       POSTGRES_DB: ${DB_NAME}
       POSTGRES_USER: ${DB_USER}
       POSTGRES_PASSWORD: ${DB_PASSWORD}
-      POSTGRES_HOST_AUTH_METHOD: trust
     ports:
       - "${DB_PORT:-5432}:5432"
     volumes:
@@ -21,6 +20,63 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+
+  migrate:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: agora-migrate
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - agora-network
+    environment:
+      # Database Configuration
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_NAME: ${DB_NAME}
+      DB_SSL_MODE: disable
+    command: ["./bin/migration", "-action=migrate"]
+    restart: "no"
+
+  server:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: agora-server
+    ports:
+      - "3000:3000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+    networks:
+      - agora-network
+    restart: unless-stopped
+    environment:
+      # Application Configuration
+      APP_ENV: production
+      APP_PORT: ${APP_PORT}
+      APP_VERSION: ${APP_VERSION}
+      
+      # Database Configuration
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_NAME: ${DB_NAME}
+      DB_SSL_MODE: disable
+      DB_LOG_QUERIES: ${DB_LOG_QUERIES}
+      
+      # Database Connection Pool Configuration
+      DB_MAX_OPEN_CONNS: ${DB_MAX_OPEN_CONNS}
+      DB_MAX_IDLE_CONNS: ${DB_MAX_IDLE_CONNS}
+      DB_CONN_MAX_LIFETIME_MINUTES: ${DB_CONN_MAX_LIFETIME_MINUTES}
+      DB_CONN_MAX_IDLE_TIME_MINUTES: ${DB_CONN_MAX_IDLE_TIME_MINUTES}
 
 volumes:
   postgres_data:

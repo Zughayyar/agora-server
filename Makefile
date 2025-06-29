@@ -86,3 +86,41 @@ migrate-rollback: build-migrate
 migrate-status: build-migrate
 	@echo "📊 Checking migration status..."
 	./bin/migration -action=status
+
+# Docker Commands
+docker-build:
+	@echo "🐳 Building Docker image..."
+	docker build -t agora-server .
+
+docker-run: docker-build
+	@echo "🚀 Running Docker container..."
+	docker run -p 3000:3000 --env-file .env agora-server
+
+docker-compose-up:
+	@echo "🐳 Starting services with Docker Compose..."
+	docker-compose up -d
+
+docker-compose-down:
+	@echo "🛑 Stopping Docker Compose services..."
+	docker-compose down
+
+docker-compose-logs:
+	@echo "📋 Showing Docker Compose logs..."
+	docker-compose logs -f
+
+docker-compose-migrate:
+	@echo "🗃️ Running migrations via Docker Compose..."
+	docker-compose run --rm server ./bin/migration -action=migrate
+
+# Deployment Commands
+deploy-check:
+	@echo "🔍 Checking deployment readiness..."
+	@if [ ! -f .env ]; then echo "❌ .env file missing"; exit 1; fi
+	@echo "✅ .env file exists"
+	@if [ ! -f Dockerfile ]; then echo "❌ Dockerfile missing"; exit 1; fi
+	@echo "✅ Dockerfile exists"
+	@if [ ! -f docker-compose.yml ]; then echo "❌ docker-compose.yml missing"; exit 1; fi
+	@echo "✅ docker-compose.yml exists"
+	@echo "🎉 Deployment ready!"
+
+.PHONY: all deps run build clean test fmt vet lint prettier dev build-migrate migrate migrate-rollback migrate-status docker-build docker-run docker-compose-up docker-compose-down docker-compose-logs docker-compose-migrate deploy-check
