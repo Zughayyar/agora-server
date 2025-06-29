@@ -61,12 +61,6 @@ jobs:
             # Pull latest code
             git pull origin main
 
-            # Copy environment file if it doesn't exist
-            if [ ! -f .env ]; then
-              cp env.example .env
-              echo "⚠️  Please configure .env file with your settings"
-            fi
-
             # Stop existing containers
             docker-compose down || true
 
