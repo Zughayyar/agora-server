@@ -219,15 +219,14 @@ func (h *MenuItemHandlers) GetDeletedMenuItems(w http.ResponseWriter, r *http.Re
 	h.writeSuccessResponse(w, items, "Deleted menu items retrieved successfully", http.StatusOK)
 }
 
-// GetMenuItemsByCategory handles GET /api/v1/menu-items/category/{category}
+// GetMenuItemsByCategory handles GET /api/v1/items/category/{category}
 func (h *MenuItemHandlers) GetMenuItemsByCategory(w http.ResponseWriter, r *http.Request) {
-	// Extract category from URL path
-	pathParts := strings.Split(strings.Trim(r.URL.Path, "/"), "/")
-	if len(pathParts) < 4 {
-		h.writeErrorResponse(w, "Invalid category path", http.StatusBadRequest)
+	// Extract category from URL path using Go 1.22+ path value
+	category := r.PathValue("category")
+	if category == "" {
+		h.writeErrorResponse(w, "Category parameter is required", http.StatusBadRequest)
 		return
 	}
-	category := pathParts[len(pathParts)-1]
 
 	// Validate category
 	validCategories := map[string]bool{
