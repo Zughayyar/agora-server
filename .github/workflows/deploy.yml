@@ -55,11 +55,11 @@ jobs:
           key: ${{ secrets.AWS_SSH_KEY }}
           port: 22
           script: |
-          # Navigate to application directory
-          cd /home/${{ secrets.AWS_USER }}/agora-server || exit 1
-          
-          # Pull latest code
-          git pull origin main
+            # Navigate to application directory
+            cd /home/${{ secrets.AWS_USER }}/agora-server || exit 1
+
+            # Pull latest code
+            git pull origin main
 
             # Copy environment file if it doesn't exist
             if [ ! -f .env ]; then
