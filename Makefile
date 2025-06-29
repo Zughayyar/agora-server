@@ -112,6 +112,23 @@ docker-compose-migrate:
 	@echo "🗃️ Running migrations via Docker Compose..."
 	docker-compose run --rm server ./bin/migration -action=migrate
 
+# Swagger Documentation Commands
+swagger-install:
+	@echo "📚 Installing Swagger CLI..."
+	go install github.com/swaggo/swag/cmd/swag@latest
+	@echo "✅ Swagger CLI installed!"
+
+swagger-generate: swagger-install
+	@echo "📝 Generating Swagger documentation..."
+	swag init -g cmd/server/main.go -o docs/
+	@echo "✅ Swagger documentation generated!"
+	@echo "🌐 Access Swagger UI at: http://localhost:3000/swagger/"
+
+swagger-clean:
+	@echo "🧹 Cleaning Swagger documentation..."
+	rm -f docs/docs.go docs/swagger.json docs/swagger.yaml
+	@echo "✅ Swagger documentation cleaned!"
+
 # Deployment Commands
 deploy-check:
 	@echo "🔍 Checking deployment readiness..."
@@ -123,4 +140,4 @@ deploy-check:
 	@echo "✅ docker-compose.yml exists"
 	@echo "🎉 Deployment ready!"
 
-.PHONY: all deps run build clean test fmt vet lint prettier dev build-migrate migrate migrate-rollback migrate-status docker-build docker-run docker-compose-up docker-compose-down docker-compose-logs docker-compose-migrate deploy-check
+.PHONY: all deps run build clean test fmt vet lint prettier dev build-migrate migrate migrate-rollback migrate-status docker-build docker-run docker-compose-up docker-compose-down docker-compose-logs docker-compose-migrate swagger-install swagger-generate swagger-clean deploy-check

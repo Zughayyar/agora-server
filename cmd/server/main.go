@@ -14,10 +14,25 @@ import (
 	"github.com/Zughayyar/agora-server/internal/middlewares"
 	router "github.com/Zughayyar/agora-server/internal/routers"
 
+	// Swagger imports
+	_ "github.com/Zughayyar/agora-server/docs" // This will be generated
+
 	"github.com/joho/godotenv"
 	"github.com/uptrace/bun"
 )
 
+// @title Agora Restaurant Management API
+// @version 1.0
+// @description A RESTful API for restaurant menu management
+// @termsOfService https://agora-restaurant.com/terms
+// @contact.name API Support
+// @contact.url https://agora-restaurant.com/support
+// @contact.email support@agora-restaurant.com
+// @license.name MIT
+// @license.url https://opensource.org/licenses/MIT
+// @host localhost:3000
+// @BasePath /api/v1
+// @schemes http https
 func main() {
 	if err := godotenv.Load(); err != nil {
 		slog.Warn("No .env file found, using system environment variables")

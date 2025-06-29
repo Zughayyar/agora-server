@@ -39,6 +39,16 @@ type SuccessResponse struct {
 }
 
 // CreateMenuItem handles POST /api/v1/menu-items
+// @Summary Create a new menu item
+// @Description Creates a new menu item with the provided details
+// @Tags Menu Items
+// @Accept json
+// @Produce json
+// @Param item body services.CreateMenuItemRequest true "Menu item details"
+// @Success 201 {object} SuccessResponse{data=services.MenuItemResponse} "Menu item created successfully"
+// @Failure 400 {object} ErrorResponse "Invalid request format"
+// @Failure 500 {object} ErrorResponse "Internal server error"
+// @Router /menu-items [post]
 func (h *MenuItemHandlers) CreateMenuItem(w http.ResponseWriter, r *http.Request) {
 	var req services.CreateMenuItemRequest
 
@@ -64,6 +74,18 @@ func (h *MenuItemHandlers) CreateMenuItem(w http.ResponseWriter, r *http.Request
 }
 
 // GetAllMenuItems handles GET /api/v1/menu-items
+// @Summary Get all menu items
+// @Description Retrieves all menu items with optional filtering by category, availability, or search term
+// @Tags Menu Items
+// @Accept json
+// @Produce json
+// @Param category query string false "Filter by category (appetizer, main, dessert, drink, side, fast food)"
+// @Param available query boolean false "Filter by availability (true/false)"
+// @Param include_deleted query boolean false "Include soft-deleted items (true/false)"
+// @Param search query string false "Search term to filter menu items"
+// @Success 200 {object} SuccessResponse{data=[]services.MenuItemResponse} "Menu items retrieved successfully"
+// @Failure 500 {object} ErrorResponse "Internal server error"
+// @Router /menu-items [get]
 func (h *MenuItemHandlers) GetAllMenuItems(w http.ResponseWriter, r *http.Request) {
 	// Check query parameters for filtering
 	category := r.URL.Query().Get("category")
@@ -103,6 +125,17 @@ func (h *MenuItemHandlers) GetAllMenuItems(w http.ResponseWriter, r *http.Reques
 }
 
 // GetMenuItemByID handles GET /api/v1/menu-items/{id}
+// @Summary Get menu item by ID
+// @Description Retrieves a specific menu item by its ID
+// @Tags Menu Items
+// @Accept json
+// @Produce json
+// @Param id path int true "Menu item ID"
+// @Success 200 {object} SuccessResponse{data=services.MenuItemResponse} "Menu item retrieved successfully"
+// @Failure 400 {object} ErrorResponse "Invalid menu item ID"
+// @Failure 404 {object} ErrorResponse "Menu item not found"
+// @Failure 500 {object} ErrorResponse "Internal server error"
+// @Router /menu-items/{id} [get]
 func (h *MenuItemHandlers) GetMenuItemByID(w http.ResponseWriter, r *http.Request) {
 	// Extract ID from URL path
 	id, err := h.extractIDFromPath(r.URL.Path)
@@ -130,6 +163,18 @@ func (h *MenuItemHandlers) GetMenuItemByID(w http.ResponseWriter, r *http.Reques
 }
 
 // UpdateMenuItem handles PUT /api/v1/menu-items/{id}
+// @Summary Update menu item
+// @Description Updates an existing menu item with the provided details
+// @Tags Menu Items
+// @Accept json
+// @Produce json
+// @Param id path int true "Menu item ID"
+// @Param item body services.UpdateMenuItemRequest true "Updated menu item details"
+// @Success 200 {object} SuccessResponse{data=services.MenuItemResponse} "Menu item updated successfully"
+// @Failure 400 {object} ErrorResponse "Invalid request format or menu item ID"
+// @Failure 404 {object} ErrorResponse "Menu item not found"
+// @Failure 500 {object} ErrorResponse "Internal server error"
+// @Router /menu-items/{id} [put]
 func (h *MenuItemHandlers) UpdateMenuItem(w http.ResponseWriter, r *http.Request) {
 	// Extract ID from URL path
 	id, err := h.extractIDFromPath(r.URL.Path)
@@ -164,6 +209,18 @@ func (h *MenuItemHandlers) UpdateMenuItem(w http.ResponseWriter, r *http.Request
 }
 
 // DeleteMenuItem handles DELETE /api/v1/menu-items/{id}
+// @Summary Delete menu item
+// @Description Soft deletes a menu item (can be restored) or permanently deletes with force=true
+// @Tags Menu Items
+// @Accept json
+// @Produce json
+// @Param id path int true "Menu item ID"
+// @Param force query boolean false "Permanently delete the item (true/false)"
+// @Success 200 {object} SuccessResponse "Menu item deleted successfully"
+// @Failure 400 {object} ErrorResponse "Invalid menu item ID"
+// @Failure 404 {object} ErrorResponse "Menu item not found"
+// @Failure 500 {object} ErrorResponse "Internal server error"
+// @Router /menu-items/{id} [delete]
 func (h *MenuItemHandlers) DeleteMenuItem(w http.ResponseWriter, r *http.Request) {
 	// Extract ID from URL path
 	id, err := h.extractIDFromPath(r.URL.Path)

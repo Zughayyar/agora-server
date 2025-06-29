@@ -1,0 +1,351 @@
+basePath: /api/v1
+definitions:
+  handlers.DatabaseHealthStatus:
+    properties:
+      error:
+        type: string
+      response_time_ms:
+        type: integer
+      status:
+        type: string
+    type: object
+  handlers.ErrorResponse:
+    properties:
+      code:
+        type: integer
+      error:
+        type: string
+      message:
+        type: string
+    type: object
+  handlers.HealthResponse:
+    properties:
+      database:
+        $ref: '#/definitions/handlers.DatabaseHealthStatus'
+      service:
+        type: string
+      status:
+        type: string
+      timestamp:
+        type: string
+    type: object
+  handlers.SuccessResponse:
+    properties:
+      data: {}
+      message:
+        type: string
+    type: object
+  services.CreateMenuItemRequest:
+    properties:
+      category:
+        enum:
+        - appetizer
+        - main
+        - dessert
+        - drink
+        - side
+        - fast food
+        type: string
+      description:
+        type: string
+      is_available:
+        type: boolean
+      name:
+        maxLength: 100
+        minLength: 1
+        type: string
+      price:
+        type: number
+    required:
+    - category
+    - name
+    - price
+    type: object
+  services.MenuItemResponse:
+    properties:
+      category:
+        type: string
+      created_at:
+        type: string
+      deleted_at:
+        type: string
+      description:
+        type: string
+      id:
+        type: integer
+      is_available:
+        type: boolean
+      name:
+        type: string
+      price:
+        type: number
+      updated_at:
+        type: string
+    type: object
+  services.UpdateMenuItemRequest:
+    properties:
+      category:
+        enum:
+        - appetizer
+        - main
+        - dessert
+        - drink
+        - side
+        - fast food
+        type: string
+      description:
+        type: string
+      is_available:
+        type: boolean
+      name:
+        maxLength: 100
+        minLength: 1
+        type: string
+      price:
+        type: number
+    type: object
+host: localhost:3000
+info:
+  contact:
+    email: support@agora-restaurant.com
+    name: API Support
+    url: https://agora-restaurant.com/support
+  description: A RESTful API for restaurant menu management
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+  termsOfService: https://agora-restaurant.com/terms
+  title: Agora Restaurant Management API
+  version: "1.0"
+paths:
+  /api/v1/health:
+    get:
+      description: Returns the health status of the service including database connectivity
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Service and database are healthy
+          schema:
+            $ref: '#/definitions/handlers.HealthResponse'
+        "503":
+          description: Service is degraded (database issues)
+          schema:
+            $ref: '#/definitions/handlers.HealthResponse'
+      summary: Comprehensive health check
+      tags:
+      - Health
+  /health:
+    get:
+      description: Returns the basic health status of the service
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Service is healthy
+          schema:
+            $ref: '#/definitions/handlers.HealthResponse'
+      summary: Basic health check
+      tags:
+      - Health
+  /menu-items:
+    get:
+      consumes:
+      - application/json
+      description: Retrieves all menu items with optional filtering by category, availability,
+        or search term
+      parameters:
+      - description: Filter by category (appetizer, main, dessert, drink, side, fast
+          food)
+        in: query
+        name: category
+        type: string
+      - description: Filter by availability (true/false)
+        in: query
+        name: available
+        type: boolean
+      - description: Include soft-deleted items (true/false)
+        in: query
+        name: include_deleted
+        type: boolean
+      - description: Search term to filter menu items
+        in: query
+        name: search
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Menu items retrieved successfully
+          schema:
+            allOf:
+            - $ref: '#/definitions/handlers.SuccessResponse'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/services.MenuItemResponse'
+                  type: array
+              type: object
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+      summary: Get all menu items
+      tags:
+      - Menu Items
+    post:
+      consumes:
+      - application/json
+      description: Creates a new menu item with the provided details
+      parameters:
+      - description: Menu item details
+        in: body
+        name: item
+        required: true
+        schema:
+          $ref: '#/definitions/services.CreateMenuItemRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Menu item created successfully
+          schema:
+            allOf:
+            - $ref: '#/definitions/handlers.SuccessResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/services.MenuItemResponse'
+              type: object
+        "400":
+          description: Invalid request format
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+      summary: Create a new menu item
+      tags:
+      - Menu Items
+  /menu-items/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Soft deletes a menu item (can be restored) or permanently deletes
+        with force=true
+      parameters:
+      - description: Menu item ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Permanently delete the item (true/false)
+        in: query
+        name: force
+        type: boolean
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Menu item deleted successfully
+          schema:
+            $ref: '#/definitions/handlers.SuccessResponse'
+        "400":
+          description: Invalid menu item ID
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "404":
+          description: Menu item not found
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+      summary: Delete menu item
+      tags:
+      - Menu Items
+    get:
+      consumes:
+      - application/json
+      description: Retrieves a specific menu item by its ID
+      parameters:
+      - description: Menu item ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Menu item retrieved successfully
+          schema:
+            allOf:
+            - $ref: '#/definitions/handlers.SuccessResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/services.MenuItemResponse'
+              type: object
+        "400":
+          description: Invalid menu item ID
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "404":
+          description: Menu item not found
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+      summary: Get menu item by ID
+      tags:
+      - Menu Items
+    put:
+      consumes:
+      - application/json
+      description: Updates an existing menu item with the provided details
+      parameters:
+      - description: Menu item ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Updated menu item details
+        in: body
+        name: item
+        required: true
+        schema:
+          $ref: '#/definitions/services.UpdateMenuItemRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Menu item updated successfully
+          schema:
+            allOf:
+            - $ref: '#/definitions/handlers.SuccessResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/services.MenuItemResponse'
+              type: object
+        "400":
+          description: Invalid request format or menu item ID
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "404":
+          description: Menu item not found
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+      summary: Update menu item
+      tags:
+      - Menu Items
+schemes:
+- http
+- https
+swagger: "2.0"

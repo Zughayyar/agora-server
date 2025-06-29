@@ -23,12 +23,18 @@ type HealthResponse struct {
 
 // DatabaseHealthStatus represents database health information
 type DatabaseHealthStatus struct {
-	Status       string        `json:"status"`
-	ResponseTime time.Duration `json:"response_time_ms"`
-	Error        string        `json:"error,omitempty"`
+	Status       string `json:"status"`
+	ResponseTime int64  `json:"response_time_ms"`
+	Error        string `json:"error,omitempty"`
 }
 
 // HealthHandler handles the root route and returns a hello message
+// @Summary Basic health check
+// @Description Returns the basic health status of the service
+// @Tags Health
+// @Produce json
+// @Success 200 {object} HealthResponse "Service is healthy"
+// @Router /health [get]
 func HealthHandler(w http.ResponseWriter, r *http.Request) {
 	response := HealthResponse{
 		Service:   "agora-server",
@@ -53,6 +59,13 @@ func HealthHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 // HealthHandlerWithDB handles health check with database connectivity check
+// @Summary Comprehensive health check
+// @Description Returns the health status of the service including database connectivity
+// @Tags Health
+// @Produce json
+// @Success 200 {object} HealthResponse "Service and database are healthy"
+// @Failure 503 {object} HealthResponse "Service is degraded (database issues)"
+// @Router /api/v1/health [get]
 func HealthHandlerWithDB(db *bun.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		response := HealthResponse{
@@ -69,14 +82,14 @@ func HealthHandlerWithDB(db *bun.DB) http.HandlerFunc {
 		if err := database.HealthCheck(ctx, db); err != nil {
 			response.Database = DatabaseHealthStatus{
 				Status:       "unhealthy",
-				ResponseTime: time.Since(start),
+				ResponseTime: time.Since(start).Milliseconds(),
 				Error:        err.Error(),
 			}
 			response.Status = "degraded" // Overall service is degraded if DB is down
 		} else {
 			response.Database = DatabaseHealthStatus{
 				Status:       "healthy",
-				ResponseTime: time.Since(start),
+				ResponseTime: time.Since(start).Milliseconds(),
 			}
 		}
 
