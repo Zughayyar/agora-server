@@ -79,7 +79,10 @@ func NewConnection(config *Config) (*bun.DB, error) {
 	defer cancel()
 
 	if err := sqldb.PingContext(ctx); err != nil {
-		sqldb.Close()
+		err := sqldb.Close()
+		if err != nil {
+			return nil, err
+		}
 		return nil, fmt.Errorf("failed to ping database: %w", err)
 	}
 

@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log/slog"
 	"net/http"
@@ -109,7 +110,7 @@ func main() {
 			slog.String("api", fmt.Sprintf("http://localhost:%s/api/v1/health", appPort)),
 		)
 
-		if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+		if err := server.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
 			logger.Error("Server failed to start", slog.String("error", err.Error()))
 			os.Exit(1)
 		}

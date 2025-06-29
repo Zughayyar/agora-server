@@ -4,6 +4,7 @@ import (
 	"context"
 	"flag"
 	"fmt"
+	"github.com/uptrace/bun"
 	"log"
 	"log/slog"
 	"os"
@@ -41,7 +42,12 @@ func main() {
 	if err != nil {
 		log.Fatalf("Failed to connect to database: %v", err)
 	}
-	defer database.Close(db)
+	defer func(db *bun.DB) {
+		err := database.Close(db)
+		if err != nil {
+			log.Fatalf("Failed to close database connection: %v", err)
+		}
+	}(db)
 
 	// Create context with timeout
 	ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
