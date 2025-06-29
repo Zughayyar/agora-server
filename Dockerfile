@@ -4,6 +4,7 @@ WORKDIR /app
 
 COPY ./internal ./internal
 COPY ./cmd ./cmd
+COPY ./docs ./docs
 COPY ./go.mod ./go.mod
 COPY ./go.sum ./go.sum
 
