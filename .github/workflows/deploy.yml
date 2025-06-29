@@ -8,10 +8,21 @@ on:
     branches:
       - main
 
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
 jobs:
-  # Build and test job - runs on both PR and push
+  # Build and push job - runs on both PR and push
   build:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    outputs:
+      image-tag: ${{ steps.meta.outputs.tags }}
+      image-digest: ${{ steps.build.outputs.digest }}
 
     steps:
       - name: Checkout code
@@ -20,13 +31,34 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      - name: Build Docker image (test only)
+      - name: Log in to Container Registry
+        if: github.event_name != 'pull_request'
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=ref,event=branch
+            type=ref,event=pr
+            type=sha,prefix={{branch}}-
+            type=raw,value=latest,enable={{is_default_branch}}
+
+      - name: Build and push Docker image
+        id: build
         uses: docker/build-push-action@v5
         with:
           context: .
           file: ./Dockerfile
-          push: false # Never push from build job
-          tags: agora-server:test
+          push: ${{ github.event_name != 'pull_request' }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
@@ -34,9 +66,10 @@ jobs:
         run: |
           if [ "${{ github.event_name }}" == "pull_request" ]; then
             echo "✅ PR Build completed successfully!"
-            echo "🔍 This was a Pull Request build - no deployment triggered"
+            echo "🔍 This was a Pull Request build - no image pushed"
           else
             echo "✅ Main branch build completed successfully!"
+            echo "📤 Image pushed to: ${{ steps.meta.outputs.tags }}"
             echo "🚀 Proceeding to deployment..."
           fi
 
@@ -49,26 +82,47 @@ jobs:
     steps:
       - name: Deploy to AWS server
         uses: appleboy/ssh-action@v1.0.3
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_ACTOR: ${{ github.actor }}
+          IMAGE_TAG: ${{ needs.build.outputs.image-tag }}
         with:
           host: ${{ secrets.AWS_IP }}
           username: ${{ secrets.AWS_USER }}
           key: ${{ secrets.AWS_SSH_KEY }}
           port: 22
+          envs: GITHUB_TOKEN,GITHUB_ACTOR,IMAGE_TAG
           script: |
             # Navigate to application directory
             cd /home/${{ secrets.AWS_USER }}/agora-server || exit 1
 
-            # Pull latest code
+            # Pull latest code (for docker-compose.yml updates)
             git pull origin main
+
+            # Login to GitHub Container Registry
+            echo $GITHUB_TOKEN | docker login ghcr.io -u $GITHUB_ACTOR --password-stdin
+
+            # Set the image tag for deployment (already available as env var)
+            echo "📥 Pulling image: $IMAGE_TAG"
+
+            # Update .env with the new image tag
+            if grep -q "IMAGE_TAG=" .env; then
+              sed -i "s|IMAGE_TAG=.*|IMAGE_TAG=$IMAGE_TAG|" .env
+            else
+              echo "IMAGE_TAG=$IMAGE_TAG" >> .env
+            fi
 
             # Stop existing containers
             docker-compose down || true
 
-            # Remove old images
-            docker image prune -f || true
+            # Pull the pre-built image (no rebuild!)
+            docker-compose pull
 
-            # Build and start services (builds fresh on server)
-            docker-compose up -d --build
+            # Start services with pre-built image
+            docker-compose up -d
+
+            # Clean up old images
+            docker image prune -f || true
 
             # Wait for services to be ready
             echo "⏳ Waiting for services to start..."
@@ -78,6 +132,7 @@ jobs:
             docker-compose ps
 
             echo "🎉 Deployment completed!"
+            echo "📦 Using image: $IMAGE_TAG"
 
       - name: Health check
         run: |
@@ -101,6 +156,7 @@ jobs:
             echo "🚀 Deployment successful!"
             echo "🌐 Application available at: http://${{ secrets.AWS_IP }}:3000"
             echo "🏥 Health check: http://${{ secrets.AWS_IP }}:3000/health"
+            echo "📦 Image: ${{ needs.build.outputs.image-tag }}"
           else
             echo "❌ Deployment failed!"
           fi

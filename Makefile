@@ -129,6 +129,23 @@ swagger-clean:
 	rm -f docs/docs.go docs/swagger.json docs/swagger.yaml
 	@echo "✅ Swagger documentation cleaned!"
 
+# Container Registry Commands
+docker-login:
+	@echo "🔐 Logging into GitHub Container Registry..."
+	@echo "$$GITHUB_TOKEN" | docker login ghcr.io -u $$GITHUB_USERNAME --password-stdin
+	@echo "✅ Logged into registry!"
+
+docker-build-push: docker-build
+	@echo "📤 Pushing image to registry..."
+	docker tag agora-server ghcr.io/zughayyar/agora-server:latest
+	docker push ghcr.io/zughayyar/agora-server:latest
+	@echo "✅ Image pushed to registry!"
+
+docker-pull:
+	@echo "📥 Pulling latest image from registry..."
+	docker pull ghcr.io/zughayyar/agora-server:latest
+	@echo "✅ Image pulled from registry!"
+
 # Deployment Commands
 deploy-check:
 	@echo "🔍 Checking deployment readiness..."
@@ -140,4 +157,4 @@ deploy-check:
 	@echo "✅ docker-compose.yml exists"
 	@echo "🎉 Deployment ready!"
 
-.PHONY: all deps run build clean test fmt vet lint prettier dev build-migrate migrate migrate-rollback migrate-status docker-build docker-run docker-compose-up docker-compose-down docker-compose-logs docker-compose-migrate swagger-install swagger-generate swagger-clean deploy-check
+.PHONY: all deps run build clean test fmt vet lint prettier dev build-migrate migrate migrate-rollback migrate-status docker-build docker-run docker-compose-up docker-compose-down docker-compose-logs docker-compose-migrate swagger-install swagger-generate swagger-clean docker-login docker-build-push docker-pull deploy-check
